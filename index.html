@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Welkom in mijn kamer</title>
+<style>
+:root{--been:#e6e0d2;--goud:#c2a66b;--lijn:linear-gradient(90deg,transparent,rgba(194,166,107,.85),transparent)}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% 35%,#1d1610,#0b0a09 60%,#000);color:var(--been);font-family:Georgia,'Times New Roman',serif}
+main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;box-sizing:border-box;text-align:center}
+h1{font-weight:400;font-size:clamp(30px,6vw,60px);letter-spacing:.08em;margin:0}
+p{opacity:.65;letter-spacing:.06em;margin:12px 0 34px}
+nav{display:flex;flex-direction:column;gap:14px;width:min(420px,100%)}
+a{display:block;padding:16px 20px;color:var(--been);text-decoration:none;border-style:solid;border-width:1px 0;border-image:var(--lijn) 1;background:linear-gradient(90deg,transparent,rgba(10,8,6,.85) 15%,rgba(10,8,6,.85) 85%,transparent)}
+a b{display:block;font-weight:400;font-size:20px;letter-spacing:.06em}
+a span{display:block;font-size:12px;letter-spacing:.08em;opacity:.6;margin-top:4px}
+a:hover,a:focus{color:var(--goud)}
+</style>
+</head>
+<body>
+<main>
+<h1>Welkom in mijn kamer</h1>
+<p>Kies hoe je wil spelen.</p>
+<nav>
+<a href="computer/"><b>Computer</b><span>Muis en toetsenbord</span></a>
+<a href="mobiel/"><b>Gsm</b><span>Liggend, met joystick</span></a>
+<a href="duo/"><b>Laptop + gsm</b><span>De kamer op je laptop, je gsm als afstandsbediening</span></a>
+</nav>
+</main>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a09">
+<title>Kamer · controller</title>
+<style>
+:root{--nacht:#0b0a09;--been:#e6e0d2;--goud:#c2a66b;--goud2:#8a7446;--lijn:linear-gradient(90deg,transparent,rgba(194,166,107,.85),transparent)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:radial-gradient(ellipse at 50% 30%,#1d1610,#0b0a09 60%,#000);color:var(--been);font-family:Georgia,'Times New Roman',serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom))}
+header{text-align:center}
+header small{display:block;font-size:10px;letter-spacing:.38em;color:var(--goud);text-transform:uppercase}
+#status{margin-top:6px;font-size:13px;letter-spacing:.06em;opacity:.8;min-height:1.3em}
+#status.ok{color:var(--goud);opacity:1}
+.band{border-style:solid;border-width:1px 0;border-image:var(--lijn) 1;background:linear-gradient(90deg,transparent,rgba(10,8,6,.85) 15%,rgba(10,8,6,.85) 85%,transparent)}
+button{font:inherit;color:var(--been);background:none;border:0}
+.knop{padding:10px 20px;letter-spacing:.14em;font-size:13px;text-transform:uppercase}
+.knop:active{color:var(--goud)}
+#koppel{margin:18px auto 0;text-align:center;display:none}
+#koppel input{font:inherit;font-size:26px;letter-spacing:.35em;text-align:center;width:200px;background:transparent;color:var(--goud);border:0;border-bottom:1px solid var(--goud2);outline:none;text-transform:uppercase;padding:6px}
+#koppel p{font-size:12px;opacity:.65;margin:8px 0 12px}
+#info{margin-top:10px;padding:10px 12px;text-align:center;min-height:62px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+#doel{font-size:11px;letter-spacing:.14em;color:var(--goud2);text-transform:uppercase}
+#prompt{font-size:16px;letter-spacing:.06em}
+#melding{font-size:12px;letter-spacing:.1em;color:var(--goud);min-height:1.2em}
+#midden{flex:1;display:flex;align-items:center;justify-content:center;gap:18px;position:relative}
+#scan{width:min(42vw,170px);height:min(42vw,170px);border-radius:50%;border:1px solid var(--goud);background:radial-gradient(rgba(194,166,107,.12),rgba(0,0,0,.5));font-size:16px;letter-spacing:.2em;text-transform:uppercase;box-shadow:0 0 30px rgba(0,0,0,.6)}
+#scan.on{background:radial-gradient(rgba(194,166,107,.5),rgba(0,0,0,.4));color:#fff;box-shadow:0 0 40px rgba(194,166,107,.35)}
+#gebruik{width:min(26vw,104px);height:min(26vw,104px);border-radius:50%;border:1px solid rgba(230,224,210,.35);font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.35}
+#gebruik.rdy{opacity:1;border-color:var(--been);box-shadow:0 0 22px rgba(230,224,210,.25)}
+#onder{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+#joyvak{position:relative;width:150px;height:150px;flex:none;touch-action:none}
+#joy{position:absolute;left:50%;top:50%;width:124px;height:124px;margin:-62px;border-radius:50%;border:1px solid rgba(194,166,107,.55);background:radial-gradient(rgba(10,8,6,.6),rgba(10,8,6,.2))}
+#joy i{position:absolute;width:0;height:0;border:5px solid transparent;opacity:.8}
+#joy .p1{left:50%;top:8px;margin-left:-5px;border-bottom-color:var(--goud)}#joy .p2{left:50%;bottom:8px;margin-left:-5px;border-top-color:var(--goud)}
+#joy .p3{top:50%;left:8px;margin-top:-5px;border-right-color:var(--goud)}#joy .p4{top:50%;right:8px;margin-top:-5px;border-left-color:var(--goud)}
+#joyk{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px;border-radius:50%;border:1px solid rgba(230,224,210,.65);background:radial-gradient(rgba(230,224,210,.3),rgba(194,166,107,.12))}
+#extra{display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:0}
+#extra .rij{display:flex;gap:6px}
+#extra button{flex:1;padding:9px 6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border-style:solid;border-width:1px 0;border-image:var(--lijn) 1;background:rgba(10,8,6,.6)}
+#extra button.aan{color:var(--goud)}
+#kijkvak{position:absolute;inset:0;pointer-events:none;display:none;align-items:flex-end;justify-content:center;font-size:11px;letter-spacing:.14em;opacity:.45;text-transform:uppercase;padding-bottom:4px}
+body.slepen #kijkvak{display:flex}
+#uitleg{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:rgba(0,0,0,.92);gap:14px}
+#uitleg h2{font-weight:400;font-size:24px;margin:0;letter-spacing:.05em}
+#uitleg p{font-size:14px;line-height:1.6;opacity:.8;margin:0;max-width:340px}
+.tel{width:44px;height:74px;border:1.5px solid var(--goud);border-radius:7px;transform:perspective(200px) rotateX(55deg);margin:10px}
+#ui{display:none;margin-top:8px}
+body.inui #ui{display:block}
+body.inui #midden,body.inui #onder{opacity:.25;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><small>Kamer · controller</small><div id="status">Verbinden…</div></header>
+  <div id="koppel"><p>Typ de code die op je laptop staat</p><input id="code" maxlength="5" autocomplete="off" autocapitalize="characters"><br><button class="knop band" id="verbind" style="margin-top:14px">Verbinden</button></div>
+  <div id="info" class="band"><div id="doel"></div><div id="prompt">—</div><div id="melding"></div></div>
+  <div id="ui" class="band" style="text-align:center"><p style="font-size:12px;opacity:.75;margin:8px">Er staat een venster open op je laptop. Gebruik daar je muis.</p><button class="knop" id="sluit">Sluiten</button></div>
+  <div id="midden"><div id="kijkvak">sleep hier om rond te kijken</div><button id="gebruik">Gebruik</button><button id="scan">Scan</button></div>
+  <div id="onder">
+    <div id="joyvak"><div id="joy"><i class="p1"></i><i class="p2"></i><i class="p3"></i><i class="p4"></i><div id="joyk"></div></div></div>
+    <div id="extra">
+      <button id="richt">Richt opnieuw</button>
+      <button id="sensor">Richten: beweging</button>
+      <div class="rij"><button id="klein">Cirkel −</button><button id="groot">Cirkel +</button></div>
+      <button id="wis">Wis punten</button>
+    </div>
+  </div>
+</div>
+<div id="uitleg"><div class="tel"></div><h2>Houd je gsm als een afstandsbediening</h2><p>Scherm naar boven, de bovenkant wijst naar je laptop. Richt op het midden van je laptopscherm en tik op de knop. Wijkt het later af, tik dan op <b>Richt opnieuw</b>.</p><button class="knop band" id="start">Start richten</button><button class="knop" id="zonder" style="font-size:11px;opacity:.7">Liever slepen met je vinger</button></div>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+/* Controller voor de duo-versie: stuurt joystick, richten, scannen en knoppen naar de laptop. */
+const $=id=>document.getElementById(id);
+const S={jx:0,jy:0,scan:false,aim:false,yaw:0,pitch:0};
+let conn=null,peer=null,host={yaw:0,pitch:0},sensorAan=false,ruw=null,off={yaw:0,pitch:0},nodigKalibratie=true,laatsteToast='';
+function status(t,ok){$('status').textContent=t;$('status').classList.toggle('ok',!!ok)}
+// twee wegen tegelijk: rechtstreeks (PeerJS) en via publieke MQTT-servers. Elk bericht krijgt een nummer.
+const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+let mq=[],code='',nr=0,laatsteN=0,verbonden=false,hostLaatst=0,halloT=null;
+function stuur(m){m.n=++nr;const txt=JSON.stringify(m);
+  if(conn&&conn.open)try{conn.send(m)}catch(e){}
+  for(const c of mq)if(c.connected)try{c.publish('kamerduo/'+code+'/c2h',txt,{qos:0})}catch(e){}}
+
+/* ---- verbinden ---- */
+function verbind(c){c=(c||'').trim().toUpperCase();if(c.length<5){status('Typ de code van 5 tekens');return}
+  code=c;$('koppel').style.display='none';status('Verbinden met '+code+'…');verbonden=false;nr=0;laatsteN=0;
+  for(const x of mq)try{x.end(true)}catch(e){}mq=[];if(peer)try{peer.destroy()}catch(e){}conn=null;
+  if(!window.mqtt&&!(window.Peer||window.peerjs)){status('Verbinden lukt niet (geen internet?)');$('koppel').style.display='block';return}
+  // via MQTT-servers
+  if(window.mqtt)for(const url of BROKERS){try{const x=mqtt.connect(url,{clientId:'gsm-'+code+'-'+Math.random().toString(36).slice(2,8),keepalive:30,reconnectPeriod:3000,connectTimeout:8000});
+    x.on('connect',()=>{x.subscribe('kamerduo/'+code+'/h2c');if(!verbonden)status('Wachten op je laptop…')});
+    x.on('message',(t,p)=>{try{ontvang(JSON.parse(p.toString()))}catch(e){}});x.on('error',()=>{});mq.push(x)}catch(e){}}
+  // rechtstreeks via PeerJS
+  const P=window.Peer||(window.peerjs&&window.peerjs.Peer);
+  if(P)try{peer=new P();peer.on('error',()=>{});peer.on('open',()=>{const c2=peer.connect('kamerduo-'+code);c2.on('open',()=>{conn=c2;stuur({t:'hallo'})});c2.on('data',ontvang);c2.on('close',()=>{if(conn===c2)conn=null})})}catch(e){}
+  // 'hallo' blijven sturen tot de laptop antwoordt
+  clearInterval(halloT);let pogingen=0;halloT=setInterval(()=>{if(verbonden){clearInterval(halloT);return}stuur({t:'hallo'});
+    if(++pogingen===15)status('Geen antwoord van je laptop. Staat het spel daar open met dezelfde code?')},1000)}
+function nuVerbonden(){if(verbonden)return;verbonden=true;status('Verbonden met je laptop',true);if(navigator.vibrate)navigator.vibrate(40);vraagWakker();
+  let sl=null;try{sl=localStorage.getItem('kamer-slepen')}catch(e){}if(!sensorAan&&!sl)$('uitleg').style.display='flex'}
+// verbinding kwijt? (5 seconden niets van de laptop)
+setInterval(()=>{if(verbonden&&performance.now()-hostLaatst>5000){verbonden=false;status('Verbinding kwijt… opnieuw proberen');verbind(code)}},1000);
+$('verbind').onclick=()=>verbind($('code').value);
+const hashCode=location.hash.slice(1);if(hashCode){$('code').value=hashCode;verbind(hashCode)}else{$('koppel').style.display='block';status('Niet verbonden')}
+
+function ontvang(m){if(!m)return;if(m.n){if(m.n<=laatsteN&&m.t!=='hallo')return;laatsteN=m.n}hostLaatst=performance.now();nuVerbonden();if(m.t!=='h')return;host.yaw=m.yaw;host.pitch=m.pitch;
+  $('prompt').textContent=m.prompt||'—';$('gebruik').classList.toggle('rdy',!!m.rdy);$('doel').textContent=m.doel||'';
+  $('melding').textContent=m.toast||'';if(m.tril&&navigator.vibrate)navigator.vibrate([30,40,30]);
+  document.body.classList.toggle('inui',!!m.ui);
+  if(!m.gestart)status('Verbonden. Klik op je laptop om te beginnen.',true);else if(conn&&conn.open)status(m.actief?'Verbonden':'Gepauzeerd op je laptop',true);
+  if(nodigKalibratie&&sensorAan&&ruw&&m.gestart&&m.actief){kalibreer()}}
+
+/* ---- richten met de bewegingssensor ---- */
+// bovenkant van de gsm = waar je kijkt. alpha = draaien (links/rechts), beta = kantelen (op/neer)
+addEventListener('deviceorientation',e=>{if(e.alpha==null)return;ruw={yaw:e.alpha*Math.PI/180,pitch:Math.max(-1.45,Math.min(1.45,e.beta*Math.PI/180))};
+  if(!sensorAan||nodigKalibratie)return;S.aim=true;S.yaw=ruw.yaw+off.yaw;S.pitch=Math.max(-1.45,Math.min(1.45,ruw.pitch+off.pitch))});
+function kalibreer(){if(!ruw||!verbonden||performance.now()-hostLaatst>1500)return; /* pas richten als we weten waar de laptop kijkt */off.yaw=host.yaw-ruw.yaw;off.pitch=host.pitch-ruw.pitch;nodigKalibratie=false;if(navigator.vibrate)navigator.vibrate(25)}
+// toestemming vragen (iPhone). Komen er daarna geen sensorgegevens binnen, dan val je terug op slepen.
+async function sensorStart(){try{if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function')await DeviceOrientationEvent.requestPermission()}catch(e){}
+  sensorAan=true;nodigKalibratie=true;document.body.classList.remove('slepen');$('sensor').textContent='Richten: beweging';$('sensor').classList.add('aan');
+  setTimeout(()=>{if(!ruw){status('Geen bewegingssensor gevonden: sleep om te kijken');zetSlepen(true)}else kalibreer()},600)}
+function zetSlepen(aan){sensorAan=!aan;S.aim=false;document.body.classList.toggle('slepen',aan);$('sensor').textContent=aan?'Richten: slepen':'Richten: beweging';$('sensor').classList.toggle('aan',!aan)}
+$('start').onclick=()=>{$('uitleg').style.display='none';sensorStart()};
+$('zonder').onclick=()=>{$('uitleg').style.display='none';try{localStorage.setItem('kamer-slepen','1')}catch(e){}zetSlepen(true)};
+$('sensor').onclick=()=>{if(sensorAan)zetSlepen(true);else sensorStart()};
+$('richt').onclick=()=>{if(sensorAan)kalibreer();else sensorStart()};
+
+/* ---- slepen om te kijken (als de sensor uit staat) ---- */
+let kijkId=null,kx=0,ky=0;const kv=$('midden');
+kv.addEventListener('touchstart',e=>{if(sensorAan||kijkId!==null)return;const t=e.changedTouches[0];if(t.target.closest('button'))return;kijkId=t.identifier;kx=t.clientX;ky=t.clientY},{passive:true});
+kv.addEventListener('touchmove',e=>{for(const t of e.changedTouches)if(t.identifier===kijkId){stuur({t:'kijk',dx:(t.clientX-kx)*1.4,dy:(t.clientY-ky)*1.4});kx=t.clientX;ky=t.clientY}},{passive:true});
+kv.addEventListener('touchend',e=>{for(const t of e.changedTouches)if(t.identifier===kijkId)kijkId=null});
+
+/* ---- scannen en gebruiken ---- */
+const sc=$('scan');
+sc.addEventListener('touchstart',e=>{e.preventDefault();S.scan=true;sc.classList.add('on');stuurStaat()},{passive:false});
+const scanUit=e=>{if(e)e.preventDefault();S.scan=false;sc.classList.remove('on');stuurStaat()};sc.addEventListener('touchend',scanUit);sc.addEventListener('touchcancel',scanUit);
+sc.addEventListener('mousedown',()=>{S.scan=true;sc.classList.add('on');stuurStaat()});sc.addEventListener('mouseup',()=>scanUit());
+$('gebruik').onclick=()=>{stuur({t:'gebruik'});if(navigator.vibrate)navigator.vibrate(15)};
+$('sluit').onclick=()=>stuur({t:'sluit'});
+$('klein').onclick=()=>stuur({t:'cirkel',d:-1});$('groot').onclick=()=>stuur({t:'cirkel',d:1});$('wis').onclick=()=>stuur({t:'wis'});
+
+/* ---- joystick ---- */
+const joyV=$('joyvak'),joyK=$('joyk'),JR=48;let joyId=null,jcx=0,jcy=0;
+function joyZet(x,y){const dx=x-jcx,dy=y-jcy,l=Math.hypot(dx,dy),k=l>JR?JR/l:1;joyK.style.transform='translate('+dx*k+'px,'+dy*k+'px)';S.jx=dx*k/JR;S.jy=dy*k/JR;if(Math.hypot(S.jx,S.jy)<.12)S.jx=S.jy=0}
+joyV.addEventListener('touchstart',e=>{e.preventDefault();if(joyId!==null)return;const t=e.changedTouches[0],r=$('joy').getBoundingClientRect();joyId=t.identifier;jcx=r.left+r.width/2;jcy=r.top+r.height/2;joyZet(t.clientX,t.clientY)},{passive:false});
+joyV.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===joyId)joyZet(t.clientX,t.clientY)},{passive:false});
+const joyLos=e=>{for(const t of e.changedTouches)if(t.identifier===joyId){joyId=null;S.jx=S.jy=0;joyK.style.transform=''}};joyV.addEventListener('touchend',joyLos);joyV.addEventListener('touchcancel',joyLos);
+
+/* ---- de toestand ~30 keer per seconde doorsturen ---- */
+function stuurStaat(){stuur({t:'s',jx:+S.jx.toFixed(3),jy:+S.jy.toFixed(3),scan:S.scan,aim:S.aim&&sensorAan&&!nodigKalibratie,yaw:+S.yaw.toFixed(4),pitch:+S.pitch.toFixed(4)})}
+// alleen sturen als er iets verandert (max ~20 keer per seconde), anders 3 keer per seconde
+let vorige='',vorigT=0;setInterval(()=>{const k=[S.jx.toFixed(2),S.jy.toFixed(2),S.scan,S.aim&&sensorAan,S.yaw.toFixed(3),S.pitch.toFixed(3)].join();
+  if(k!==vorige||performance.now()-vorigT>330){vorige=k;vorigT=performance.now();if(verbonden)stuurStaat()}},50);
+// scherm laten aanstaan tijdens het spelen
+let wakker=null;async function vraagWakker(){try{if(navigator.wakeLock&&!wakker)wakker=await navigator.wakeLock.request('screen');wakker&&wakker.addEventListener('release',()=>wakker=null)}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')vraagWakker()});
+</script>
+</body>
+</html>
