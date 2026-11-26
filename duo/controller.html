@@ -50,6 +50,23 @@ body.slepen #kijkvak{display:flex}
 #ui{display:none;margin-top:8px}
 body.inui #ui{display:block}
 body.inui #midden,body.inui #onder{opacity:.25;pointer-events:none}
+/* spiegel: knoppen om van kleren te wisselen */
+#spiegel{display:none;flex:1;flex-direction:column;gap:12px;margin-top:10px}
+body.spiegel #spiegel{display:flex}
+body.spiegel #midden,body.spiegel #onder,body.spiegel #info,body.spiegel #ui{display:none!important}
+#spiegel h3{margin:0;text-align:center;font-weight:400;font-size:20px;letter-spacing:.08em}
+#spiegel h3+p{margin:2px 0 4px;text-align:center;font-size:12px;opacity:.6}
+.sp{padding:10px 8px}
+.sp small{display:block;text-align:center;font-size:10px;letter-spacing:.3em;color:var(--goud2);text-transform:uppercase}
+.sp .k{display:flex;align-items:center;gap:6px;margin-top:6px}
+.sp .k b{flex:1;text-align:center;font-weight:400;font-size:16px;line-height:1.25;min-height:2.5em;display:flex;align-items:center;justify-content:center}
+.sp .k button{width:58px;height:52px;font-size:20px;border:1px solid rgba(194,166,107,.4)}
+.sp .k button:active{background:rgba(194,166,107,.25)}
+.sp .uit{display:block;margin:6px auto 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.65;padding:6px 14px}
+.sp.leeg b{opacity:.4}
+#uitslag{text-align:center;color:var(--goud);font-size:15px;letter-spacing:.06em;min-height:1.3em}
+#spknop{display:flex;flex-direction:column;gap:8px;margin-top:auto}
+#spknop button{padding:14px;font-size:14px;letter-spacing:.16em;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -57,6 +74,13 @@ body.inui #midden,body.inui #onder{opacity:.25;pointer-events:none}
   <header><small>Kamer · controller</small><div id="status">Verbinden…</div></header>
   <div id="koppel"><p>Typ de code die op je laptop staat</p><input id="code" maxlength="5" autocomplete="off" autocapitalize="characters"><br><button class="knop band" id="verbind" style="margin-top:14px">Verbinden</button></div>
   <div id="info" class="band"><div id="doel"></div><div id="prompt">—</div><div id="melding"></div></div>
+  <div id="spiegel"><h3>Spiegel</h3><p>Ga voor de camera van je laptop staan</p>
+    <div class="sp band" data-s="top"><small>Bovenaan</small><div class="k"><button data-d="-1">◀</button><b>—</b><button data-d="1">▶</button></div><button class="uit">Uittrekken</button></div>
+    <div class="sp band" data-s="broek"><small>Broek</small><div class="k"><button data-d="-1">◀</button><b>—</b><button data-d="1">▶</button></div><button class="uit">Uittrekken</button></div>
+    <div class="sp band" data-s="schoenen"><small>Schoenen</small><div class="k"><button data-d="-1">◀</button><b>—</b><button data-d="1">▶</button></div><button class="uit">Uittrekken</button></div>
+    <div id="uitslag"></div>
+    <div id="spknop"><button class="band" id="verstuur">Outfit versturen</button><button class="band" id="spsluit">Sluiten</button></div>
+  </div>
   <div id="ui" class="band" style="text-align:center"><p style="font-size:12px;opacity:.75;margin:8px">Er staat een venster open op je laptop. Gebruik daar je muis.</p><button class="knop" id="sluit">Sluiten</button></div>
   <div id="midden"><div id="kijkvak">sleep hier om rond te kijken</div><button id="gebruik">Gebruik</button><button id="scan">Scan</button></div>
   <div id="onder">
@@ -110,7 +134,9 @@ const hashCode=location.hash.slice(1);if(hashCode){$('code').value=hashCode;verb
 function ontvang(m){if(!m)return;if(m.n){if(m.n<=laatsteN&&m.t!=='hallo')return;laatsteN=m.n}hostLaatst=performance.now();nuVerbonden();if(m.t!=='h')return;host.yaw=m.yaw;host.pitch=m.pitch;
   $('prompt').textContent=m.prompt||'—';$('gebruik').classList.toggle('rdy',!!m.rdy);$('doel').textContent=m.doel||'';
   $('melding').textContent=m.toast||'';if(m.tril&&navigator.vibrate)navigator.vibrate([30,40,30]);
-  document.body.classList.toggle('inui',!!m.ui);
+  document.body.classList.toggle('inui',!!m.ui&&m.ui!=='spiegel');document.body.classList.toggle('spiegel',m.ui==='spiegel');
+  if(m.ui==='spiegel'&&m.kleren){for(const el of document.querySelectorAll('.sp')){const n=m.kleren[el.dataset.s];el.classList.toggle('leeg',!n);el.querySelector('b').textContent=n||'Niets';el.querySelector('.uit').textContent=n?'Uittrekken':'Aantrekken'}
+    $('verstuur').style.display=m.kan?'':'none';$('uitslag').textContent=m.uitslag||''}
   if(!m.gestart)status('Verbonden. Klik op je laptop om te beginnen.',true);else if(conn&&conn.open)status(m.actief?'Verbonden':'Gepauzeerd op je laptop',true);
   if(nodigKalibratie&&sensorAan&&ruw&&m.gestart&&m.actief){kalibreer()}}
 
@@ -142,6 +168,8 @@ const scanUit=e=>{if(e)e.preventDefault();S.scan=false;sc.classList.remove('on')
 sc.addEventListener('mousedown',()=>{S.scan=true;sc.classList.add('on');stuurStaat()});sc.addEventListener('mouseup',()=>scanUit());
 $('gebruik').onclick=()=>{stuur({t:'gebruik'});if(navigator.vibrate)navigator.vibrate(15)};
 $('sluit').onclick=()=>stuur({t:'sluit'});
+for(const el of document.querySelectorAll('.sp')){const s=el.dataset.s;el.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{stuur({t:'kleed',s,d:+b.dataset.d});if(navigator.vibrate)navigator.vibrate(10)});el.querySelector('.uit').onclick=()=>stuur({t:'uitdoen',s})}
+$('verstuur').onclick=()=>{stuur({t:'verstuur'});if(navigator.vibrate)navigator.vibrate(30)};$('spsluit').onclick=()=>stuur({t:'sluit'});
 $('klein').onclick=()=>stuur({t:'cirkel',d:-1});$('groot').onclick=()=>stuur({t:'cirkel',d:1});$('wis').onclick=()=>stuur({t:'wis'});
 
 /* ---- joystick ---- */
